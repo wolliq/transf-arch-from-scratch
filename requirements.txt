@@ -1,0 +1,10 @@
+requests
+polars
+torch
+transformers
+tokenizer
+loguru
+ruff
+pydantic
+black
+pylint
