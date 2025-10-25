@@ -69,7 +69,18 @@ During training the script reports bits-per-character (BPC) for both splits, app
 After training you can sample from the saved model using the bundled launcher:
 
 ```bash
-python -m transf_scratch.sample_model \
+PYTHONPATH=src python -m transf_scratch.sample_model \
+  --checkpoint checkpoints/model.pt \
+  --prompt "The transformer" \
+  --max_new_tokens 200 \
+  --temperature 0.8 \
+  --top_k 40
+```
+
+If you prefer not to modify `PYTHONPATH`, call it with the explicit package path:
+
+```bash
+python -m src.transf_scratch.sample_model \
   --checkpoint checkpoints/model.pt \
   --prompt "The transformer" \
   --max_new_tokens 200 \
