@@ -30,6 +30,28 @@ pip install -r requirements.txt
 
 If you need a seed dataset, run with `--download_gutenberg` and the script will fetch a few small public-domain novels into your data directory.
 
+```mermaid
+flowchart TD
+    A[Parse CLI arguments] --> B{Download Gutenberg?}
+    B -- Yes --> C[Fetch public-domain texts]
+    B -- No --> D[Use existing data_dir]
+    C --> E[Read and clean .txt corpus]
+    D --> E
+    E --> F[Build tokenizer & encode corpus]
+    F --> G[Split ids into train/val]
+    G --> H[Create LMSequenceDataset loaders]
+    H --> I[Initialise TinyDecoderLM]
+    I --> J[Train epochs with AdamW + cosine LR]
+    J --> K{Better validation loss?}
+    K -- Yes --> L[Save checkpoint with tokenizer metadata]
+    K -- No --> J
+    L --> M{sample_len > 0?}
+    K -- Loop done --> M
+    M -- Yes --> N[Generate continuation via autoregressive sampling]
+    M -- No --> O[Finish run]
+    N --> O
+```
+
 ## Quick Start
 ```bash
 python train_custom_transformer.py \
