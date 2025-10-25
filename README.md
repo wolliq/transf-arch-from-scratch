@@ -65,6 +65,20 @@ python train_custom_transformer.py \
 
 During training the script reports bits-per-character (BPC) for both splits, applies AdamW with cosine annealing, clips gradients, and saves the best checkpoint to `--out_dir` (default `./checkpoints/model.pt`).
 
+## Generate From Checkpoint
+After training you can sample from the saved model using the bundled launcher:
+
+```bash
+python -m transf_scratch.sample_model \
+  --checkpoint checkpoints/model.pt \
+  --prompt "The transformer" \
+  --max_new_tokens 200 \
+  --temperature 0.8 \
+  --top_k 40
+```
+
+The script loads the checkpoint, rebuilds the transformer with its stored configuration, and prints the generated text continuation for the supplied prompt. Use `--cpu` if you want to force CPU inference.
+
 ## Command-Line Arguments
 
 | Group | Flag | Description | Default |

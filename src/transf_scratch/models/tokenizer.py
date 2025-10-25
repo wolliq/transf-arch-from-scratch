@@ -22,12 +22,14 @@ class CharTokenizer:
         """Convert raw text into integer token ids ready for the transformer embedding."""
         if self.kind == "byte":
             return list(value.encode("utf-8", errors="ignore"))
-        assert self.stoi is not None
+        if self.stoi is None:
+            raise ValueError("Character tokenizer requires stoi mapping to encode text.")
         return [self.stoi[ch] for ch in value if ch in self.stoi]
 
     def decode(self, ids: List[int]) -> str:
         """Map model outputs back into readable text for inspection."""
         if self.kind == "byte":
             return bytes([int(i) % 256 for i in ids]).decode("utf-8", errors="ignore")
-        assert self.itos is not None
+        if self.itos is None:
+            raise ValueError("Character tokenizer requires itos mapping to decode ids.")
         return "".join(self.itos[i] for i in ids if i in self.itos)
