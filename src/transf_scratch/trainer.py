@@ -20,10 +20,12 @@ class Trainer:
     """Orchestrates data loading, model training, checkpointing, and sampling."""
 
     def __init__(self, args):
+        """Record CLI configuration and choose device for transformer training."""
         self.args = args
         self.device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
 
     def run(self) -> None:
+        """End-to-end driver that prepares data, builds the model, and kicks off optimisation."""
         print(f"[info] device: {self.device}")
         if self.args.download_gutenberg:
             data.maybe_download_gutenberg(self.args.data_dir)
@@ -57,6 +59,7 @@ class Trainer:
             self._sample(artifacts)
 
     def _train(self, artifacts: TrainingArtifacts, train_loader, val_loader) -> None:
+        """Iterate over epochs to optimise the decoder-only transformer and checkpoint the best weights."""
         model = artifacts.model
         optimizer = torch.optim.AdamW(
             model.parameters(),
@@ -84,6 +87,7 @@ class Trainer:
                 self._save_checkpoint(artifacts)
 
     def _run_epoch(self, model, loader, optimizer, scheduler, train_mode: bool) -> float:
+        """Process one pass through a dataloader, updating parameters when train_mode is True."""
         model.train(train_mode)
         total_loss, total_tokens = 0.0, 0
         for x, y in loader:
@@ -105,6 +109,7 @@ class Trainer:
         return total_loss / max(1, total_tokens)
 
     def _save_checkpoint(self, artifacts: TrainingArtifacts) -> None:
+        """Persist model weights and tokenizer metadata for later reuse."""
         os.makedirs(self.args.out_dir, exist_ok=True)
         ckpt_path = os.path.join(self.args.out_dir, "model.pt")
         tokenizer = artifacts.tokenizer
@@ -129,6 +134,7 @@ class Trainer:
         print(f"[info] saved checkpoint to {ckpt_path}")
 
     def _sample(self, artifacts: TrainingArtifacts) -> None:
+        """Generate a short continuation so we can qualitatively inspect the trained transformer."""
         print("[info] sampling...")
         artifacts.model.eval()
         start = "The"

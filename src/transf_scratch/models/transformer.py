@@ -17,6 +17,7 @@ class TinyDecoderLM(nn.Module):
         context_len: int = 256,
         dropout: float = 0.0,
     ):
+        """Assemble token embeddings, positional encodings, and stacked decoder blocks."""
         super().__init__()
         self.token_emb = nn.Embedding(vocab_size, dim)
         self.pos_enc = SinusoidalPositionalEncoding(dim, max_len=context_len + 10_000)
@@ -30,6 +31,7 @@ class TinyDecoderLM(nn.Module):
         self.context_len = context_len
 
     def forward(self, idx: torch.Tensor, start_pos: int = 0) -> torch.Tensor:
+        """Compute next-token logits for each position in the provided context window."""
         tokens = self.token_emb(idx)
         tokens = self.pos_enc(tokens, start_pos=start_pos)
 
@@ -43,6 +45,7 @@ class TinyDecoderLM(nn.Module):
 
     @torch.no_grad()
     def generate(self, idx: torch.Tensor, max_new_tokens: int, temperature: float = 1.0, top_k: int = 0) -> torch.Tensor:
+        """Auto-regressively extend the prompt by sampling from the transformer's predictions."""
         self.eval()
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.context_len :]

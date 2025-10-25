@@ -4,6 +4,7 @@ from .trainer import Trainer
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Construct CLI argument parser describing transformer training hyperparameters."""
     parser = argparse.ArgumentParser(
         description="Train a tiny decoder-only Transformer language model from scratch."
     )
@@ -53,10 +54,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def parse_args(argv=None) -> argparse.Namespace:
+    """Parse CLI arguments so callers can configure the training run."""
     return build_arg_parser().parse_args(argv)
 
 
 def main(argv=None) -> None:
+    """Entry point that instantiates the trainer and launches the transformer workflow."""
     args = parse_args(argv)
     trainer = Trainer(args)
     trainer.run()
