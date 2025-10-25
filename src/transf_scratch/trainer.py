@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 from . import data
 from .models import CharTokenizer, TinyDecoderLM
+from loguru import logger
 
 
 @dataclass
@@ -26,13 +27,13 @@ class Trainer:
 
     def run(self) -> None:
         """End-to-end driver that prepares data, builds the model, and kicks off optimisation."""
-        print(f"[info] device: {self.device}")
+        logger.info("Using device: {}", self.device)
         if self.args.download_gutenberg:
             data.maybe_download_gutenberg(self.args.data_dir)
 
         raw_text = data.read_all_texts(self.args.data_dir)
         tokenizer = CharTokenizer(raw_text, kind=self.args.vocab)
-        print(f"[info] vocab_size={tokenizer.vocab_size} (kind={tokenizer.kind})")
+        logger.info("Tokenizer built with vocab_size={} (kind={})", tokenizer.vocab_size, tokenizer.kind)
 
         ids_all = tokenizer.encode(raw_text)
         train_ids, val_ids = data.split_data(ids_all, train_ratio=0.9)
@@ -54,6 +55,8 @@ class Trainer:
         ).to(self.device)
 
         artifacts = TrainingArtifacts(tokenizer=tokenizer, model=model)
+        logger.info("Model initialised with dim={}, depth={}, heads={}, context_len={}",
+                    self.args.dim, self.args.depth, self.args.heads, self.args.context_len)
         self._train(artifacts, train_loader, val_loader)
         if self.args.sample_len > 0:
             self._sample(artifacts)
@@ -73,13 +76,17 @@ class Trainer:
 
         best_val = float("inf")
         for epoch in range(1, self.args.epochs + 1):
+            logger.info("Starting epoch {}", epoch)
             start_time = time.time()
             train_loss = self._run_epoch(model, train_loader, optimizer, scheduler, train_mode=True)
             val_loss = self._run_epoch(model, val_loader, optimizer, None, train_mode=False)
             duration = time.time() - start_time
-            print(
-                f"[epoch {epoch:03d}] train_bpc={train_loss / math.log(2):.4f} "
-                f"val_bpc={val_loss / math.log(2):.4f} ({duration:.1f}s)"
+            logger.info(
+                "Epoch {:03d} complete | train_bpc={:.4f} val_bpc={:.4f} duration={:.1f}s",
+                epoch,
+                train_loss / math.log(2),
+                val_loss / math.log(2),
+                duration,
             )
 
             if val_loss < best_val:
@@ -131,11 +138,12 @@ class Trainer:
             },
             ckpt_path,
         )
-        print(f"[info] saved checkpoint to {ckpt_path}")
+        logger.info("Saved checkpoint to {}", ckpt_path)
 
     def _sample(self, artifacts: TrainingArtifacts) -> None:
         """Generate a short continuation so we can qualitatively inspect the trained transformer."""
-        print("[info] sampling...")
+        logger.info("Sampling from trained model (sample_len={}, temperature={}, top_k={})",
+                    self.args.sample_len, self.args.temperature, self.args.top_k)
         artifacts.model.eval()
         start = "The"
         idx = torch.tensor([artifacts.tokenizer.encode(start)], dtype=torch.long, device=self.device)
@@ -145,4 +153,4 @@ class Trainer:
             temperature=self.args.temperature,
             top_k=self.args.top_k,
         )
-        print(artifacts.tokenizer.decode(out_ids[0].tolist()))
+        logger.info("Sampled text:\n{}", artifacts.tokenizer.decode(out_ids[0].tolist()))

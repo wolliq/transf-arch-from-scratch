@@ -1,7 +1,9 @@
 import argparse
+import sys
+
+from loguru import logger
 
 from .trainer import Trainer
-
 
 def build_arg_parser() -> argparse.ArgumentParser:
     """Construct CLI argument parser describing transformer training hyperparameters."""
@@ -60,6 +62,8 @@ def parse_args(argv=None) -> argparse.Namespace:
 
 def main(argv=None) -> None:
     """Entry point that instantiates the trainer and launches the transformer workflow."""
+    logger.remove()
+    logger.add(sys.stderr, level="INFO")
     args = parse_args(argv)
     trainer = Trainer(args)
     trainer.run()

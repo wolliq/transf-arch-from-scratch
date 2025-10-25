@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -9,6 +9,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     requests = None
 
+from loguru import logger
 
 GUTENBERG_URLS: Dict[str, str] = {
     "frankenstein": "https://www.gutenberg.org/ebooks/84.txt.utf-8",
@@ -21,13 +22,13 @@ def maybe_download_gutenberg(out_dir: str) -> None:
     """Download a small bundle of public-domain texts if they are missing."""
     os.makedirs(out_dir, exist_ok=True)
     if requests is None:
-        print("[warn] 'requests' not available; skipping Gutenberg download.")
+        logger.warning("'requests' not available; skipping Gutenberg download.")
         return
     for name, url in GUTENBERG_URLS.items():
         path = os.path.join(out_dir, f"{name}.txt")
         if os.path.exists(path):
             continue
-        print(f"[info] downloading {name} ...")
+        logger.info("Downloading Gutenberg text: {}", name)
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
         with open(path, "wb") as handle:
@@ -40,6 +41,7 @@ def read_all_texts(data_dir: str) -> str:
     for filename in os.listdir(data_dir):
         if not filename.lower().endswith(".txt"):
             continue
+        logger.debug("Reading corpus file {}", filename)
         with open(os.path.join(data_dir, filename), "r", encoding="utf-8", errors="ignore") as handle:
             content = handle.read()
         start = content.find("*** START OF THE PROJECT GUTENBERG EBOOK")
@@ -53,6 +55,7 @@ def read_all_texts(data_dir: str) -> str:
         texts.append(content[start:end].strip())
     if not texts:
         raise RuntimeError(f"No .txt files found in {data_dir}. Provide data or enable --download_gutenberg.")
+    logger.info("Loaded {} text files from {}", len(texts), data_dir)
     return "\n\n".join(texts)
 
 
