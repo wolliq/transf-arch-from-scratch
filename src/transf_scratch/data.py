@@ -100,6 +100,7 @@ def build_dataloaders(
     context_len: int,
     stride: int,
     batch_size: int,
+    num_workers: int,
 ) -> Tuple[DataLoader, DataLoader]:
     """Create training and validation dataloaders feeding the transformer with fixed windows."""
     train_dataset = LMSequenceDataset(train_ids, context_len=context_len, step=stride or context_len)
@@ -110,6 +111,7 @@ def build_dataloaders(
         shuffle=True,
         drop_last=True,
         collate_fn=_stack_batch,
+        num_workers=num_workers,
     )
     val_loader = DataLoader(
         val_dataset,
@@ -117,5 +119,6 @@ def build_dataloaders(
         shuffle=False,
         drop_last=False,
         collate_fn=_stack_batch,
+        num_workers=num_workers,
     )
     return train_loader, val_loader

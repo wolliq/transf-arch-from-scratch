@@ -43,6 +43,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--temperature", type=float, default=1.0, help="Softmax temperature during sampling.")
     parser.add_argument("--top_k", type=int, default=0, help="Top-k sampling cutoff; 0 disables truncation.")
 
+    # Parallelism
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=0,
+        help="Number of worker processes for data loading.",
+    )
+
     # Tokeniser
     parser.add_argument(
         "--vocab",

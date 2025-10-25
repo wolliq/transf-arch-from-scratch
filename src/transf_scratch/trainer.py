@@ -43,6 +43,7 @@ class Trainer:
             context_len=self.args.context_len,
             stride=self.args.stride,
             batch_size=self.args.batch_size,
+            num_workers=self.args.num_workers,
         )
 
         model = TinyDecoderLM(
